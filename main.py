@@ -18,12 +18,9 @@ class TrainingProgramGenerator:
         # Загружаем настройки или используем значения по умолчанию
         self.load_settings()
 
-
-
         self.setup_ui()
 
         self.root.bind('<KeyPress>', self._on_key_press)
-
 
         # Фокусируем окно, чтобы оно получало события клавиатуры
         self.root.focus_set()
