@@ -22,8 +22,21 @@ class TrainingProgramGenerator:
 
         self.setup_ui()
 
+        self.root.bind('<KeyPress>', self._on_key_press)
+
+
+        # Фокусируем окно, чтобы оно получало события клавиатуры
+        self.root.focus_set()
+
         # Привязываем обработчик закрытия окна
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def _on_key_press(self, event):
+        """Обработка нажатия клавиш"""
+        key = event.keysym.lower()
+
+        if key == 'return':
+            self.generate_plan()
 
     def setup_ui(self):
         # Основной фрейм
