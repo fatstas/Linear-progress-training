@@ -176,6 +176,7 @@ class TrainingProgramGenerator:
         }
         self.save_settings()
         messagebox.showinfo("Успех", f"Пресет '{preset_name}' сохранен!")
+        self.update_presets_list()
 
     def load_preset(self, preset_name):
         """Загружает пресет"""
@@ -194,6 +195,7 @@ class TrainingProgramGenerator:
             del self.presets[preset_name]
             self.save_settings()
             messagebox.showinfo("Успех", f"Пресет '{preset_name}' удален!")
+            self.update_presets_list()
 
     def show_preset_dialog(self):
         """Показывает диалог управления пресетами"""
@@ -218,22 +220,28 @@ class TrainingProgramGenerator:
         list_frame = ttk.LabelFrame(dialog, text="Сохраненные пресеты", padding="10")
         list_frame.pack(fill="both", expand=True, padx=10, pady=5)
 
-        listbox = tk.Listbox(list_frame)
-        listbox.pack(fill="both", expand=True, pady=5)
+        self.listbox = tk.Listbox(list_frame)
+        self.listbox.pack(fill="both", expand=True, pady=5)
 
         for preset_name in self.presets.keys():
-            listbox.insert(tk.END, preset_name)
+            self.listbox.insert(tk.END, preset_name)
 
         # Кнопки управления
         btn_frame = ttk.Frame(list_frame)
         btn_frame.pack(fill="x", pady=5)
 
         ttk.Button(btn_frame, text="📂 Загрузить выбранный",
-                   command=lambda: self.load_preset(listbox.get(tk.ACTIVE))).pack(side="left", padx=2)
+                   command=lambda: self.load_preset(self.listbox.get(tk.ACTIVE))).pack(side="left", padx=2)
         ttk.Button(btn_frame, text="🗑️ Удалить выбранный",
-                   command=lambda: self.delete_preset(listbox.get(tk.ACTIVE))).pack(side="left", padx=2)
+                   command=lambda: self.delete_preset(self.listbox.get(tk.ACTIVE))).pack(side="left", padx=2)
         ttk.Button(btn_frame, text="✏️ Переименовать",
-                   command=lambda: self.rename_preset_dialog(listbox.get(tk.ACTIVE))).pack(side="left", padx=2)
+                   command=lambda: self.rename_preset_dialog(self.listbox.get(tk.ACTIVE))).pack(side="left", padx=2)
+
+    def update_presets_list(self):
+        """Обновляет список пресетов в listbox"""
+        self.listbox.delete(0, tk.END)
+        for preset_name in sorted(self.presets.keys()):
+            self.listbox.insert(tk.END, preset_name)
 
     def rename_preset_dialog(self, old_name):
         """Диалог переименования пресета"""
@@ -260,6 +268,7 @@ class TrainingProgramGenerator:
                 messagebox.showinfo("Успех", f"Пресет переименован в '{new_name}'!")
 
         ttk.Button(dialog, text="Переименовать", command=rename_preset).pack(pady=10)
+        self.update_presets_list()
 
     def load_settings(self):
         """Загружает настройки из файла"""
