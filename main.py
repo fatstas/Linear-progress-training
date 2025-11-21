@@ -175,7 +175,6 @@ class TrainingProgramGenerator:
             'step': self.step_entry.get()
         }
         self.save_settings()
-        messagebox.showinfo("Успех", f"Пресет '{preset_name}' сохранен!")
         self.update_presets_list()
 
     def load_preset(self, preset_name):
@@ -194,7 +193,6 @@ class TrainingProgramGenerator:
         if preset_name in self.presets:
             del self.presets[preset_name]
             self.save_settings()
-            messagebox.showinfo("Успех", f"Пресет '{preset_name}' удален!")
             self.update_presets_list()
 
     def show_preset_dialog(self):
@@ -264,8 +262,9 @@ class TrainingProgramGenerator:
             if new_name and new_name != old_name:
                 self.presets[new_name] = self.presets.pop(old_name)
                 self.save_settings()
+                self.update_presets_list()
                 dialog.destroy()
-                messagebox.showinfo("Успех", f"Пресет переименован в '{new_name}'!")
+
 
         ttk.Button(dialog, text="Переименовать", command=rename_preset).pack(pady=10)
         self.update_presets_list()
@@ -534,9 +533,9 @@ class TrainingProgramGenerator:
                 percentage = (rounded_weight / one_rep_max) * 100
 
                 # Находим подходящие подходы по проценту
-                sets_reps = "1x1"  # По умолчанию
+                sets_reps = None  # По умолчанию
                 for min_p, max_p, reps in ranges:
-                    if min_p <= percentage < max_p:
+                    if min_p < percentage <= max_p:
                         sets_reps = reps
                         break
 
@@ -545,6 +544,9 @@ class TrainingProgramGenerator:
 
                 if rounded_weight <= start_weight:
                     sets_reps = ranges[0][2]
+
+                if sets_reps is None:
+                    break
                 # Форматируем вывод
                 workout_label = f"{workout_num}"
                 weight_label = f"{rounded_weight:.1f}"
