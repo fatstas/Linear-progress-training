@@ -4,6 +4,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side
 import json
 import os
+from RmCalculator import RMCalculator
 
 
 class TrainingProgramGenerator:
@@ -11,6 +12,7 @@ class TrainingProgramGenerator:
         self.root = root
         self.root.title("Генератор плана тренировок - Линейная прогрессия")
         self.root.geometry("1200x750")
+        self.notebook = None
 
         # Файл для сохранения настроек
         self.settings_file = "training_settings.json"
@@ -19,6 +21,7 @@ class TrainingProgramGenerator:
         self.load_settings()
 
         self.setup_ui()
+
 
         self.root.bind('<KeyPress>', self._on_key_press)
 
@@ -45,8 +48,15 @@ class TrainingProgramGenerator:
                                 font=("Arial", 18, "bold"))
         title_label.grid(row=0, column=0, columnspan=2, pady=(0, 20))  # Изменил columnspan на 2
 
+        self.notebook = ttk.Notebook(main_frame)
+        self.notebook.grid(row=1, column=0, sticky="nsew")
+
+        # Создать основную вкладку (весь существующий интерфейс)
+        main_tab = ttk.Frame(self.notebook, padding="10")
+        self.notebook.add(main_tab, text="📊 Программа")
+
         # ЛЕВАЯ КОЛОНКА - настройки
-        left_frame = ttk.Frame(main_frame)
+        left_frame = ttk.Frame(main_tab)
         left_frame.grid(row=1, column=0, sticky="nsew", padx=(0, 15))
 
         # Фрейм ввода основных параметров (переносим в left_frame)
@@ -109,7 +119,7 @@ class TrainingProgramGenerator:
                    command=self.clear_all).pack(side=tk.LEFT, padx=10)
 
         # Область вывода (перемещаем в правую колонку)
-        output_frame = ttk.LabelFrame(main_frame, text="План тренировок", padding="10")
+        output_frame = ttk.LabelFrame(main_tab, text="План тренировок", padding="10")
         output_frame.grid(row=1, column=1, sticky="nsew", pady=10)  # column=1 вместо 0
 
         # Текстовое поле с прокруткой
@@ -120,6 +130,10 @@ class TrainingProgramGenerator:
 
         self.output_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+
+        self.rm_calc = RMCalculator(self.notebook)
+        calc_tab = self.rm_calc.create_calculator_tab()
+        self.notebook.add(calc_tab, text="🧮 Калькулятор 1ПМ")
 
         # НАСТРОЙКА РАСПРЕДЕЛЕНИЯ ПРОСТРАНСТВА
         # Основное окно
