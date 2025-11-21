@@ -199,7 +199,7 @@ class TrainingProgramGenerator:
         """Показывает диалог управления пресетами"""
         dialog = tk.Toplevel(self.root)
         dialog.title("Управление пресетами")
-        dialog.geometry("400x500")
+        dialog.geometry("500x500")
         dialog.transient(self.root)
         dialog.grab_set()
 
@@ -232,7 +232,7 @@ class TrainingProgramGenerator:
                    command=lambda: self.load_preset(self.listbox.get(tk.ACTIVE))).pack(side="left", padx=2)
         ttk.Button(btn_frame, text="🗑️ Удалить выбранный",
                    command=lambda: self.delete_preset(self.listbox.get(tk.ACTIVE))).pack(side="left", padx=2)
-        ttk.Button(btn_frame, text="✏️ Переименовать",
+        ttk.Button(btn_frame, text="✏ Переименовать",
                    command=lambda: self.rename_preset_dialog(self.listbox.get(tk.ACTIVE))).pack(side="left", padx=2)
 
     def update_presets_list(self):
