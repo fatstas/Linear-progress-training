@@ -481,7 +481,7 @@ class TrainingProgramGenerator:
             start_weight = one_rep_max * start_percent / 100
             end_weight = one_rep_max * end_percent / 100
 
-            current_weight = start_weight
+            current_weight = self.round_weight(start_weight)
             workout_num = 1
 
             output = f"📈 ЛИНЕЙНАЯ ПРОГРЕССИЯ\n"
