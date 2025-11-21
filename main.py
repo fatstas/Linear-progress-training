@@ -18,6 +18,8 @@ class TrainingProgramGenerator:
         # Загружаем настройки или используем значения по умолчанию
         self.load_settings()
 
+
+
         self.setup_ui()
 
         # Привязываем обработчик закрытия окна
@@ -82,6 +84,9 @@ class TrainingProgramGenerator:
         ttk.Button(range_buttons_frame, text="+ Добавить диапазон",
                    command=self.add_range_row).pack(side=tk.LEFT, padx=5)
 
+        ttk.Button(range_buttons_frame, text="📚 Управление пресетами",
+                   command=self.show_preset_dialog).pack(side=tk.LEFT, padx=5)
+
         # Кнопки генерации и экспорта
         button_frame = ttk.Frame(left_frame)
         button_frame.grid(row=3, column=0, columnspan=3, pady=20)
@@ -134,6 +139,104 @@ class TrainingProgramGenerator:
         # Устанавливаем текущий размер окна под содержимое
         self.root.geometry(f"{req_width}x{req_height}")
 
+    def save_current_preset(self, preset_name):
+        """Сохраняет текущие настройки как пресет"""
+        if not preset_name:
+            return
+
+        current_ranges = self.get_current_ranges()
+        self.presets[preset_name] = {
+            'ranges': current_ranges,
+            'max_weight': self.max_weight_entry.get(),
+            'step': self.step_entry.get()
+        }
+        self.save_settings()
+        messagebox.showinfo("Успех", f"Пресет '{preset_name}' сохранен!")
+
+    def load_preset(self, preset_name):
+        """Загружает пресет"""
+        if preset_name in self.presets:
+            preset = self.presets[preset_name]
+            self.create_range_rows(preset['ranges'])
+            self.max_weight_entry.delete(0, tk.END)
+            self.max_weight_entry.insert(0, preset.get('max_weight', '100'))
+            self.step_entry.delete(0, tk.END)
+            self.step_entry.insert(0, preset.get('step', '2.5'))
+            self.current_preset_name = preset_name
+
+    def delete_preset(self, preset_name):
+        """Удаляет пресет"""
+        if preset_name in self.presets:
+            del self.presets[preset_name]
+            self.save_settings()
+            messagebox.showinfo("Успех", f"Пресет '{preset_name}' удален!")
+
+    def show_preset_dialog(self):
+        """Показывает диалог управления пресетами"""
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Управление пресетами")
+        dialog.geometry("400x500")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        # Сохранение текущего пресета
+        save_frame = ttk.LabelFrame(dialog, text="Сохранить текущие настройки", padding="10")
+        save_frame.pack(fill="x", padx=10, pady=5)
+
+        ttk.Label(save_frame, text="Название пресета:").pack(anchor="w")
+        preset_name_entry = ttk.Entry(save_frame, width=30)
+        preset_name_entry.pack(fill="x", pady=5)
+
+        ttk.Button(save_frame, text="💾 Сохранить как новый пресет",
+                   command=lambda: self.save_current_preset(preset_name_entry.get())).pack(fill="x", pady=5)
+
+        # Список пресетов
+        list_frame = ttk.LabelFrame(dialog, text="Сохраненные пресеты", padding="10")
+        list_frame.pack(fill="both", expand=True, padx=10, pady=5)
+
+        listbox = tk.Listbox(list_frame)
+        listbox.pack(fill="both", expand=True, pady=5)
+
+        for preset_name in self.presets.keys():
+            listbox.insert(tk.END, preset_name)
+
+        # Кнопки управления
+        btn_frame = ttk.Frame(list_frame)
+        btn_frame.pack(fill="x", pady=5)
+
+        ttk.Button(btn_frame, text="📂 Загрузить выбранный",
+                   command=lambda: self.load_preset(listbox.get(tk.ACTIVE))).pack(side="left", padx=2)
+        ttk.Button(btn_frame, text="🗑️ Удалить выбранный",
+                   command=lambda: self.delete_preset(listbox.get(tk.ACTIVE))).pack(side="left", padx=2)
+        ttk.Button(btn_frame, text="✏️ Переименовать",
+                   command=lambda: self.rename_preset_dialog(listbox.get(tk.ACTIVE))).pack(side="left", padx=2)
+
+    def rename_preset_dialog(self, old_name):
+        """Диалог переименования пресета"""
+        if not old_name:
+            return
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Переименование пресета")
+        dialog.geometry("300x150")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        ttk.Label(dialog, text=f"Новое название для '{old_name}':").pack(pady=10)
+        new_name_entry = ttk.Entry(dialog, width=30)
+        new_name_entry.pack(pady=5)
+        new_name_entry.insert(0, old_name)
+
+        def rename_preset():
+            new_name = new_name_entry.get()
+            if new_name and new_name != old_name:
+                self.presets[new_name] = self.presets.pop(old_name)
+                self.save_settings()
+                dialog.destroy()
+                messagebox.showinfo("Успех", f"Пресет переименован в '{new_name}'!")
+
+        ttk.Button(dialog, text="Переименовать", command=rename_preset).pack(pady=10)
+
     def load_settings(self):
         """Загружает настройки из файла"""
         try:
@@ -148,6 +251,9 @@ class TrainingProgramGenerator:
                     (70, 90, "5x5"),
                     (90, 100, "5x3")
                 ])
+
+                self.presets = settings.get('presets', {})
+                self.current_preset_name = None
 
             else:
                 # Настройки по умолчанию
@@ -170,11 +276,9 @@ class TrainingProgramGenerator:
     def save_settings(self):
         """Сохраняет настройки в файл"""
         try:
-            # Получаем текущие диапазоны
-            current_ranges = self.get_current_ranges()
-
             settings = {
-                'ranges': current_ranges
+                'ranges': self.get_current_ranges(),
+                'presets': self.presets
             }
 
             with open(self.settings_file, 'w', encoding='utf-8') as f:
@@ -193,7 +297,7 @@ class TrainingProgramGenerator:
         """Создает строки для редактирования диапазонов"""
         # Очищаем существующие записи
         for widget in self.ranges_frame.grid_slaves():
-            if int(widget.grid_info()["row"]) > 0:  # Все кроме заголовков
+            if 10 > int(widget.grid_info()["row"]) > 0:  # Все кроме заголовков
                 widget.destroy()
 
         self.range_entries = []
@@ -392,7 +496,7 @@ class TrainingProgramGenerator:
 
             plan_data = []
 
-            while current_weight <= end_weight:
+            while self.round_weight(current_weight) <= end_weight:
                 rounded_weight = self.round_weight(current_weight)
                 percentage = (rounded_weight / one_rep_max) * 100
 
@@ -413,13 +517,7 @@ class TrainingProgramGenerator:
                 weight_label = f"{rounded_weight:.1f}"
                 percentage_label = f"{percentage:.1f}%"
 
-                # Особое оформление для граничных значений
-                if abs(current_weight - start_weight) < 0.1:
-                    sets_label = f"▶️ {sets_reps}"
-                elif abs(current_weight - end_weight) < 0.1:
-                    sets_label = f"🏁 {sets_reps}"
-                else:
-                    sets_label = sets_reps
+                sets_label = sets_reps
 
                 output += f"{workout_label:<12} {weight_label:<12} {percentage_label:<12} {sets_label:<20}\n"
                 plan_data.append([workout_num, rounded_weight, sets_reps, percentage])
