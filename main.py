@@ -484,8 +484,8 @@ class TrainingProgramGenerator:
     def generate_plan(self):
         """Генерирует план тренировок"""
         try:
-            one_rep_max = float(self.max_weight_entry.get())
-            step = float(self.step_entry.get())
+            one_rep_max = float(self.max_weight_entry.get().replace(',', '.'))
+            step = float(self.step_entry.get().replace(',', '.'))
             # Получаем текущие настройки диапазонов
             ranges = self.get_current_ranges()
 
