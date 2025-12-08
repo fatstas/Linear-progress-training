@@ -35,8 +35,16 @@ class TrainingProgramGenerator:
         """Обработка нажатия клавиш"""
         key = event.keysym.lower()
 
-        if key == 'return':
+        if key == 'return' and self.get_current_tab_name() == '📊 Программа':
             self.generate_plan()
+
+        elif key == 'return' and self.get_current_tab_name() == '🧮 Калькулятор 1ПМ':
+            self.rm_calc.calculate_1rm()
+
+    def get_current_tab_name(self):
+        """Возвращает название текущей вкладки"""
+        current = self.notebook.select()
+        return self.notebook.tab(current, "text")
 
     def setup_ui(self):
         # Основной фрейм
@@ -609,7 +617,7 @@ class TrainingProgramGenerator:
             # Данные тренировок
             start_row = 6
 
-            headers = ["Тренировка", "Вес (кг)", "Подходы х Повторы", "% от максимума"]
+            headers = ["Трен-ка", "Вес (кг)", "Подх. х Повт.", "%"]
             for col, header in enumerate(headers, 1):
                 ws.cell(row=start_row, column=col, value=header)
 
@@ -645,7 +653,7 @@ class TrainingProgramGenerator:
                 ws.column_dimensions[column_letter].width = adjusted_width
 
             wb.save(file_path)
-            messagebox.showinfo("Успех", f"План тренировок сохранен в:\n{file_path}")
+            os.startfile(file_path)
 
         except Exception as e:
             messagebox.showerror("Ошибка", f"Не удалось сохранить файл:\n{str(e)}")
