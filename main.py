@@ -5,6 +5,7 @@ from openpyxl.styles import Font, Alignment, Border, Side
 import json
 import os
 from RmCalculator import RMCalculator
+from operator import itemgetter
 
 
 class TrainingProgramGenerator:
@@ -496,6 +497,7 @@ class TrainingProgramGenerator:
             step = float(self.step_entry.get().replace(',', '.'))
             # Получаем текущие настройки диапазонов
             ranges = self.get_current_ranges()
+            ranges = sorted(ranges, key=itemgetter(0))
 
             if not ranges:
                 messagebox.showerror("Ошибка", "Добавьте хотя бы один диапазон подходов")
@@ -531,7 +533,7 @@ class TrainingProgramGenerator:
             output += f"🏁 Конечный вес: {end_weight:.1f} кг\n"
             output += f"📐 Шаг увеличения: {step} кг\n"
             output += "=" * 70 + "\n"
-            output += f"{'Тренировка':<12} {'Вес (кг)':<12} {'% от макс':<12} {'Подходы':<20}\n"
+            output += f"{'Тренировка':<12} {'Вес (кг)':<12} {'% от макс':<12} {'Подходы':<12} {'ПМ': <8}\n"
             output += "-" * 70 + "\n"
 
             plan_data = []
@@ -543,7 +545,7 @@ class TrainingProgramGenerator:
                 # Находим подходящие подходы по проценту
                 sets_reps = None  # По умолчанию
                 for min_p, max_p, reps in ranges:
-                    if min_p < percentage <= max_p:
+                    if min_p <= percentage <= max_p:
                         sets_reps = reps
                         break
 
@@ -554,7 +556,8 @@ class TrainingProgramGenerator:
                     sets_reps = ranges[0][2]
 
                 if sets_reps is None:
-                    break
+                    current_weight += step
+                    continue
                 # Форматируем вывод
                 workout_label = f"{workout_num}"
                 weight_label = f"{rounded_weight:.1f}"
@@ -562,7 +565,17 @@ class TrainingProgramGenerator:
 
                 sets_label = sets_reps
 
-                output += f"{workout_label:<12} {weight_label:<12} {percentage_label:<12} {sets_label:<20}\n"
+                _reps = None
+                try:
+                    _reps = int(sets_label.replace('x', 'X')
+                                .replace('х', 'X')
+                                .replace('Х', 'X')
+                                .split('X')[1])
+                    _reps = self.rm_calc.calculate_1rm(False, rounded_weight, _reps)
+                except Exception as e:
+                    print(f'Error parse reps {e}')
+
+                output += f"{workout_label:<12} {weight_label:<12} {percentage_label:<12} {sets_label:<12} {_reps: <12}\n"
                 plan_data.append([workout_num, rounded_weight, sets_reps, percentage])
 
                 current_weight += step

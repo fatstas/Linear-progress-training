@@ -62,11 +62,15 @@ class RMCalculator:
 
         return calculator_frame
 
-    def calculate_1rm(self):
+    def calculate_1rm(self, gui=True, weight1=None, reps1=None):
         """Рассчитывает 1ПМ по разным формулам"""
         try:
-            weight = float(self.rm_weight_entry.get())
+            weight = float(self.rm_weight_entry.get().replace(',', '.'))
             reps = int(self.rm_reps_entry.get())
+
+            if weight1 and reps1:
+                weight = weight1
+                reps = reps1
 
             if weight <= 0 or reps <= 0:
                 messagebox.showerror("Ошибка", "Вес и повторения должны быть положительными числами")
@@ -97,6 +101,9 @@ class RMCalculator:
 
             # Добавляем в таблицу
             avg_rm = sum(rm for _, rm in results) / len(results)
+
+            if not gui:
+                return round(avg_rm, 1)
 
             for name, rm in results:
                 diff = rm - avg_rm
